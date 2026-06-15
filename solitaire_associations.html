@@ -1,0 +1,1729 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>โซลิแทร์ความสัมพันธ์</title>
+<style>
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+button, .mbtn, .back-btn, .lv-c, .draw-wrap, .act-btn, .lt, .ov-b, .card-el, .waste-card-el, .slot {
+  touch-action: manipulation;
+  cursor: pointer;
+}
+:root {
+  --bg-felt: radial-gradient(circle, #22c55e 0%, #15803d 70%, #14532d 100%);
+  --bg-felt-dark: #0f3e22;
+  --card-bg: #fffdf9;
+  --card-border: #e2d9c8;
+  --cat-border: #f59e0b;
+  --cat-bg: #fffbeb;
+  --text-dark: #2c1e11;
+  --text-med: #6b5a4b;
+  --text-gold: #b45309;
+  --crown: #fbbf24;
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.18);
+  --shadow-lg: 0 10px 22px rgba(0, 0, 0, 0.3);
+  --blue-grad: linear-gradient(135deg, #3b82f6, #1d4ed8);
+}
+body {
+  background: var(--bg-felt);
+  font-family: -apple-system, BlinkMacSystemFont, 'Noto Sans Thai', 'Segoe UI', sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.screen {
+  display: none;
+  position: fixed;
+  inset: 0;
+  flex-direction: column;
+  background: var(--bg-felt);
+}
+.screen.active {
+  display: flex;
+}
+
+/* MENU */
+#s-menu {
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+.menu-title {
+  color: #ffffff;
+  font-size: 2.2rem;
+  font-weight: 800;
+  text-shadow: 0 4px 12px rgba(0,0,0,0.45);
+  text-align: center;
+  line-height: 1.25;
+}
+.menu-sub {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.92rem;
+  text-align: center;
+  font-weight: 500;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.menu-cards {
+  display: flex;
+  margin-bottom: 8px;
+  justify-content: center;
+  gap: 8px;
+}
+.mc {
+  width: 60px;
+  height: 84px;
+  border-radius: 12px;
+  border: 2px solid var(--card-border);
+  background: var(--card-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  box-shadow: var(--shadow-lg);
+}
+.mc:nth-child(2) {
+  transform: rotate(8deg) translateX(-10px) translateY(-4px);
+}
+.mc:nth-child(3) {
+  transform: rotate(-6deg) translateX(-20px) translateY(-2px);
+}
+.mbtn {
+  padding: 14px 32px;
+  border-radius: 24px;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 700;
+  font-family: inherit;
+  width: 220px;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+.mbtn-play {
+  background: linear-gradient(135deg, #fcd34d, #f59e0b);
+  color: #451a03;
+}
+.mbtn-play:hover {
+  background: linear-gradient(135deg, #fef08a, #d97706);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+}
+.mbtn-edit {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: 1.5px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(4px);
+}
+.mbtn-edit:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+}
+
+/* LEVEL SELECT */
+#s-levels {
+  padding: 0;
+}
+.ls-header {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.ls-header h2 {
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.back-btn {
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 16px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: all 0.15s;
+}
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.02);
+}
+.ls-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+.lv-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+  gap: 12px;
+}
+.lv-c {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 14px 10px;
+  text-align: center;
+  cursor: pointer;
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 110px;
+}
+.lv-c:hover {
+  background: rgba(255, 255, 255, 0.16);
+  transform: translateY(-3px) scale(1.03);
+  border-color: rgba(255,255,255,0.3);
+  box-shadow: var(--shadow-md);
+}
+.lv-c.done {
+  border-color: var(--crown);
+  background: rgba(245, 158, 11, 0.15);
+}
+.lv-num {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #fff;
+}
+.lv-name {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.8);
+  margin-top: 2px;
+  line-height: 1.3;
+  word-break: break-word;
+}
+.lv-mv {
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.5);
+  margin-top: 3px;
+  font-weight: 500;
+}
+.lv-star {
+  color: var(--crown);
+  font-size: 0.9rem;
+  margin-top: 4px;
+  letter-spacing: 1px;
+}
+
+/* GAME */
+#s-game {
+  padding: 0;
+  overflow: hidden;
+}
+.g-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  gap: 12px;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.18);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+.mv-badge {
+  background: #10b981;
+  border-radius: 12px;
+  padding: 6px 12px;
+  color: #fff;
+  min-width: 80px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.mv-lbl {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.85;
+}
+.mv-num {
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.1;
+}
+.lv-lbl {
+  color: #fff;
+  font-size: 1.35rem;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  text-align: center;
+}
+.draw-wrap {
+  position: relative;
+  width: 58px;
+  height: 80px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+.draw-wrap:active {
+  transform: scale(0.95);
+}
+.draw-shadow {
+  position: absolute;
+  border-radius: 10px;
+  background: #1d4ed8;
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+}
+.draw-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  background: #2563eb;
+  border: 2px solid #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3;
+  box-shadow: var(--shadow-md);
+}
+.draw-cnt {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #1e293b;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 9px;
+  z-index: 4;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.draw-pat {
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 1.8rem;
+}
+.waste-strip {
+  height: 96px;
+  position: relative;
+  flex-shrink: 0;
+  margin: 6px 16px;
+  display: flex;
+  justify-content: center;
+}
+.waste-card-el {
+  width: 64px;
+  height: 86px;
+  border-radius: 10px;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: var(--shadow-md);
+  transition: transform 0.15s;
+}
+.waste-card-el:active {
+  transform: scale(0.97);
+}
+.waste-face {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  background: var(--card-bg);
+  border: 2px solid var(--card-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 6px 4px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  line-height: 1.25;
+}
+.waste-face.is-cat {
+  border-color: var(--cat-border);
+  background: var(--cat-bg);
+}
+.waste-face.sel {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px #38bdf8, var(--shadow-md);
+}
+.slots-row {
+  display: grid;
+  gap: 8px;
+  padding: 4px 16px 8px;
+  flex-shrink: 0;
+}
+.slot {
+  min-height: 80px;
+  border-radius: 10px;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  position: relative;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+.slot.occupied {
+  border-style: solid;
+  border-color: var(--cat-border);
+  background: rgba(245, 158, 11, 0.1);
+}
+.slot.drag-hi {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.15);
+  transform: scale(1.02);
+}
+.slot.done-sl {
+  border-style: solid;
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+}
+.slot-inner {
+  width: 100%;
+  height: 100%;
+  min-height: 76px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+}
+.slot-crown-ico {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 1.5rem;
+}
+.slot-name {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  text-align: center;
+  line-height: 1.2;
+  margin-top: 3px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+.tableau {
+  flex: 1;
+  display: grid;
+  gap: 8px;
+  padding: 4px 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  align-content: start;
+}
+.col {
+  position: relative;
+  min-height: 90px;
+}
+.col-inner {
+  position: relative;
+  width: 100%;
+}
+.card-el {
+  position: absolute;
+  width: 100%;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.cf {
+  width: 100%;
+  border-radius: 10px;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 6px 4px;
+  line-height: 1.2;
+  color: var(--text-dark);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+.cf.cat-f {
+  border-color: var(--cat-border);
+  background: var(--cat-bg);
+}
+.cf.sel-f {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px #38bdf8, var(--shadow-md);
+}
+.cb {
+  width: 100%;
+  border-radius: 10px;
+  background: #2563eb;
+  border: 2px solid #ffffff;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+.cb-pat {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #3b82f6 25%, transparent 25%) -15px 0,
+              linear-gradient(225deg, #3b82f6 25%, transparent 25%) -15px 0,
+              linear-gradient(45deg, #3b82f6 25%, transparent 25%),
+              linear-gradient(315deg, #3b82f6 25%, #1d4ed8 25%);
+  background-size: 30px 30px;
+}
+.cat-badge {
+  font-size: 0.55rem;
+  color: var(--text-gold);
+  margin-top: 3px;
+  font-weight: 700;
+}
+.act-bar {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  padding: 12px 8px 16px;
+  flex-shrink: 0;
+  background: rgba(0, 0, 0, 0.1);
+}
+.act-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: inherit;
+  transition: transform 0.15s;
+}
+.act-btn:active {
+  transform: scale(0.92);
+}
+.act-ico {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  position: relative;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+}
+.act-bdg {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.act-lbl {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.ico-blue { background: linear-gradient(135deg, #60a5fa, #2563eb); }
+.ico-gray { background: linear-gradient(135deg, #e2e8f0, #94a3b8); color: #1e293b; }
+.ico-gold { background: linear-gradient(135deg, #fbbf24, #d97706); }
+
+/* OVERLAY */
+.ov {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  backdrop-filter: blur(4px);
+}
+.ov-box {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 32px 24px;
+  text-align: center;
+  max-width: 310px;
+  width: 90%;
+  box-shadow: var(--shadow-lg);
+  animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes pop {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.ov-ico {
+  font-size: 3.2rem;
+  margin-bottom: 10px;
+}
+.ov-t {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 6px;
+}
+.ov-m {
+  color: var(--text-med);
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+}
+.ov-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ov-b {
+  padding: 12px;
+  border-radius: 16px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: inherit;
+  transition: transform 0.15s, opacity 0.15s;
+}
+.ov-b:active {
+  transform: scale(0.97);
+}
+.ov-gold {
+  background: linear-gradient(135deg, #fcd34d, #f59e0b);
+  color: #451a03;
+  box-shadow: 0 4px 10px rgba(245,158,11,0.3);
+}
+.ov-gray {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* LANG TOGGLE */
+.lang-tog {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 400;
+  display: flex;
+  gap: 4px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 18px;
+  padding: 4px;
+  backdrop-filter: blur(4px);
+}
+.lt {
+  padding: 4px 12px;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: rgba(255,255,255,0.7);
+  background: transparent;
+  transition: all 0.15s;
+}
+.lt.on {
+  background: var(--crown);
+  color: #451a03;
+}
+
+/* TOAST */
+#toast {
+  position: fixed;
+  bottom: 85px;
+  left: 50%;
+  transform: translate(-50%, 0);
+  background: rgba(15, 23, 42, 0.95);
+  color: #fff;
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  z-index: 500;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+  white-space: nowrap;
+  max-width: 90vw;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* EDITOR */
+#s-editor {
+  overflow-y: auto;
+  padding: 16px;
+}
+.ed-hdr {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  position: sticky;
+  top: 0;
+  background: var(--bg-felt-dark);
+  padding: 8px 12px;
+  border-radius: 16px;
+  z-index: 10;
+  box-shadow: var(--shadow-sm);
+}
+.ed-hdr h2 {
+  color: #fff;
+  font-size: 1.1rem;
+  flex: 1;
+}
+.ed-sec {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+.ed-sec h3 {
+  color: rgba(255,255,255,0.85);
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  padding-bottom: 6px;
+}
+.ed-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.ed-grp label {
+  display: block;
+  color: rgba(255,255,255,0.6);
+  font-size: 0.72rem;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+.ed-grp input, .ed-grp textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.ed-grp input:focus {
+  border-color: var(--crown);
+}
+.cat-blk {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.cat-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.ed-del {
+  background: #ef4444;
+  border: none;
+  color: #fff;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+  transition: opacity 0.15s;
+}
+.ed-del:hover {
+  opacity: 0.9;
+}
+.ed-add {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1.5px dashed rgba(255, 255, 255, 0.25);
+  color: #fff;
+  border-radius: 10px;
+  padding: 8px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  width: 100%;
+  font-family: inherit;
+  font-weight: 600;
+  margin-top: 4px;
+  transition: all 0.2s;
+}
+.ed-add:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255,255,255,0.4);
+}
+.ed-save {
+  background: linear-gradient(135deg, #fcd34d, #f59e0b);
+  color: #451a03;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 16px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  width: 100%;
+  margin-top: 8px;
+  box-shadow: 0 4px 10px rgba(245,158,11,0.25);
+}
+.lv-li {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.lv-li-name {
+  color: #fff;
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.lv-li-info {
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.75rem;
+}
+
+/* Messenger / in-app browser hint — visible by default (JS may be blocked) */
+#open-hint {
+  display: block;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 600;
+  background: rgba(15, 23, 42, 0.96);
+  color: #fff;
+  padding: 12px 16px 20px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  text-align: center;
+  border-top: 2px solid #f59e0b;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.35);
+}
+#open-hint b { color: #fcd34d; }
+#open-hint-close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.6);
+  font-size: 1.1rem;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+
+<script>
+(function(){
+  function dispatch(el){
+    if(!el||!el.dataset.action)return;
+    var fn=window.__dispatch;
+    if(fn)fn(el);
+    else window.__actionQueue=(window.__actionQueue||[]).concat([el]);
+  }
+  function onTap(e){
+    if(e.target.closest('input,textarea,select,label'))return;
+    var el=e.target.closest('[data-action]');
+    if(!el)return;
+    dispatch(el);
+  }
+  document.addEventListener('click',onTap,true);
+})();
+</script>
+
+<div id="open-hint">
+  <button type="button" id="open-hint-close" data-action="hint-close">✕</button>
+  <span data-th="⚠️ Messenger เปิดไฟล์ HTML ไม่รองรับเกม — กด <b>⋯</b> (มุมขวาบน) → <b>เปิดใน Safari</b> หรือ <b>บันทึก/ดาวน์โหลด</b> แล้วเปิดจากแอปไฟล์" data-en="⚠️ Messenger can't run this game — tap <b>⋯</b> → <b>Open in Safari</b> or download & open from Files">⚠️ Messenger เปิดไฟล์ HTML ไม่รองรับเกม — กด <b>⋯</b> (มุมขวาบน) → <b>เปิดใน Safari</b> หรือ <b>บันทึก/ดาวน์โหลด</b> แล้วเปิดจากแอปไฟล์</span>
+</div>
+
+<div class="lang-tog">
+  <button type="button" class="lt on" data-action="lang" data-lang="th">TH</button>
+  <button type="button" class="lt" data-action="lang" data-lang="en">EN</button>
+</div>
+<div id="toast"></div>
+
+<!-- MENU -->
+<div id="s-menu" class="screen active">
+  <div class="menu-cards"><div class="mc">🎴</div><div class="mc">♠</div><div class="mc">👑</div></div>
+  <div class="menu-title" data-th="โซลิแทร์ความสัมพันธ์" data-en="Solitaire Associations">โซลิแทร์ความสัมพันธ์</div>
+  <div class="menu-sub" data-th="จัดหมวดหมู่ · ฝึกสมอง · ไม่มีโฆษณา 🎀" data-en="Sort · Train · No Ads 🎀">จัดหมวดหมู่ · ฝึกสมอง · ไม่มีโฆษณา 🎀</div>
+  <button type="button" class="mbtn mbtn-play" data-action="screen" data-screen="levels" data-th="▶ เริ่มเล่น" data-en="▶ Play">▶ เริ่มเล่น</button>
+  <button type="button" class="mbtn mbtn-edit" style="margin-top:6px" data-action="screen" data-screen="editor" data-th="✏️ สร้างด่าน" data-en="✏️ Level Editor">✏️ สร้างด่าน</button>
+</div>
+
+<!-- LEVEL SELECT -->
+<div id="s-levels" class="screen">
+  <div class="ls-header">
+    <button type="button" class="back-btn" data-action="screen" data-screen="menu">← <span data-th="กลับ" data-en="Back">กลับ</span></button>
+    <h2 data-th="เลือกด่าน" data-en="Select Level">เลือกด่าน</h2>
+    <div style="width:52px"></div>
+  </div>
+  <div class="ls-scroll"><div id="lv-grid" class="lv-grid"></div></div>
+</div>
+
+<!-- GAME -->
+<div id="s-game" class="screen">
+  <div class="g-top">
+    <button type="button" class="back-btn" data-action="quit" style="padding:6px 10px">✕</button>
+    <div class="mv-badge">
+      <div class="mv-lbl" data-th="Moves" data-en="Moves">Moves</div>
+      <div class="mv-num" id="g-mv">0</div>
+    </div>
+    <div class="lv-lbl" id="g-ttl">Level 1</div>
+    <div class="draw-wrap" data-action="draw" id="draw-el">
+      <div class="draw-shadow" style="width:58px;height:80px;top:3px;left:3px;z-index:1"></div>
+      <div class="draw-shadow" style="width:58px;height:80px;top:1.5px;left:1.5px;z-index:2"></div>
+      <div class="draw-face" style="z-index:3"><div class="draw-pat">◆</div></div>
+      <div class="draw-cnt" id="draw-cnt">0</div>
+    </div>
+  </div>
+  <div class="waste-strip" id="waste-strip"></div>
+  <div class="slots-row" id="slots-row"></div>
+  <div class="tableau" id="tableau"></div>
+  <div class="act-bar">
+    <button type="button" class="act-btn" data-action="hint">
+      <div class="act-ico ico-blue">💡<span class="act-bdg" id="cnt-hint">∞</span></div>
+      <span class="act-lbl" data-th="คำใบ้" data-en="Hint">คำใบ้</span>
+    </button>
+    <button type="button" class="act-btn" data-action="undo">
+      <div class="act-ico ico-gray">↩<span class="act-bdg" id="cnt-undo">∞</span></div>
+      <span class="act-lbl" data-th="ย้อน" data-en="Undo">ย้อน</span>
+    </button>
+    <button type="button" class="act-btn" data-action="extra">
+      <div class="act-ico ico-gold">⭐<span class="act-bdg" id="cnt-ext">∞</span></div>
+      <span class="act-lbl" data-th="+20 Moves" data-en="+20 Moves">+20 Moves</span>
+    </button>
+  </div>
+</div>
+
+<!-- EDITOR -->
+<div id="s-editor" class="screen">
+  <div class="ed-hdr">
+    <button type="button" class="back-btn" data-action="screen" data-screen="menu">←</button>
+    <h2 data-th="Level Editor" data-en="Level Editor">Level Editor</h2>
+    <button type="button" class="back-btn" data-action="ed-new" data-th="+ ใหม่" data-en="+ New">+ ใหม่</button>
+  </div>
+  <div id="ed-list"></div>
+  <div id="ed-form" style="display:none">
+    <div class="ed-sec">
+      <h3 data-th="ข้อมูลด่าน" data-en="Level Info">ข้อมูลด่าน</h3>
+      <div class="ed-row">
+        <div class="ed-grp"><label>ชื่อ (TH)</label><input id="ei-th" placeholder="ชื่อด่าน"></div>
+        <div class="ed-grp"><label>Name (EN)</label><input id="ei-en" placeholder="Level name"></div>
+      </div>
+      <div class="ed-row">
+        <div class="ed-grp"><label>Max Moves</label><input id="ei-mv" type="number" value="80"></div>
+        <div class="ed-grp"><label>Level No.</label><input id="ei-id" type="number" placeholder="auto"></div>
+      </div>
+    </div>
+    <div class="ed-sec">
+      <h3 data-th="หมวดหมู่และคำ" data-en="Categories & Words">หมวดหมู่และคำ</h3>
+      <div id="ed-cats"></div>
+      <button type="button" class="ed-add" data-action="ed-add-cat">+ เพิ่มหมวด</button>
+    </div>
+    <button type="button" class="ed-save" data-action="ed-save">💾 บันทึก</button>
+    <button type="button" class="ed-add" style="margin-top:6px" data-action="ed-cancel">ยกเลิก</button>
+  </div>
+</div>
+
+<!-- OVERLAY -->
+<div id="ov" style="display:none" class="ov">
+  <div class="ov-box">
+    <div class="ov-ico" id="ov-ico">🏆</div>
+    <div class="ov-t" id="ov-t">ยอดเยี่ยม!</div>
+    <div class="ov-m" id="ov-m"></div>
+    <div class="ov-btns" id="ov-btns"></div>
+  </div>
+</div>
+
+<script>
+try{
+const LEVEL_DATA = {"levels":[{"level":1,"totalMoves":60,"categories":[{"id":"cat_1_1","name":{"th":"สิ่งของในทะเล","en":"Ocean Elements"},"itemCount":3,"items":[{"th":"เปลือกหอย","en":"Shell"},{"th":"คลื่น","en":"Wave"},{"th":"ทราย","en":"Sand"}]},{"id":"cat_1_2","name":{"th":"ขนมหวาน","en":"Desserts"},"itemCount":3,"items":[{"th":"เค้ก","en":"Cake"},{"th":"พุดดิ้ง","en":"Pudding"},{"th":"เจลลี่","en":"Jelly"}]},{"id":"cat_1_3","name":{"th":"เครื่องเขียน","en":"Writing Tools"},"itemCount":3,"items":[{"th":"ปากกา","en":"Pen"},{"th":"ไม้บรรทัด","en":"Ruler"},{"th":"น้ำหมึก","en":"Ink"}]},{"id":"cat_1_4","name":{"th":"หน่วยเวลา","en":"Units of Time"},"itemCount":3,"items":[{"th":"วินาที","en":"Second"},{"th":"นาที","en":"Minute"},{"th":"ชั่วโมง","en":"Hour"}]}]},{"level":2,"totalMoves":70,"categories":[{"id":"cat_2_1","name":{"th":"ส่วนประกอบของต้นไม้","en":"Tree Parts"},"itemCount":4,"items":[{"th":"เปลือกไม้","en":"Bark"},{"th":"ใบไม้","en":"Leaf"},{"th":"ราก","en":"Root"},{"th":"กิ่งไม้","en":"Branch"}]},{"id":"cat_2_2","name":{"th":"คำศัพท์การเงิน","en":"Financial Terms"},"itemCount":4,"items":[{"th":"ธนาคาร","en":"Bank"},{"th":"ธนบัตร","en":"Note"},{"th":"เหรียญ","en":"Coin"},{"th":"พันธบัตร","en":"Bond"}]},{"id":"cat_2_3","name":{"th":"ปรากฏการณ์สภาพอากาศ","en":"Weather Phenomena"},"itemCount":4,"items":[{"th":"ฝน","en":"Rain"},{"th":"ลม","en":"Wind"},{"th":"หมอก","en":"Fog"},{"th":"ลูกเห็บ","en":"Hail"}]},{"id":"cat_2_4","name":{"th":"หน้าไพ่ป๊อก","en":"Card Suits"},"itemCount":4,"items":[{"th":"ดอกจิก","en":"Club"},{"th":"โพดำ","en":"Spade"},{"th":"ข้าวหลามตัด","en":"Diamond"},{"th":"โพแดง","en":"Heart"}]}]},{"level":3,"totalMoves":80,"categories":[{"id":"cat_3_1","name":{"th":"ดาราศาสตร์","en":"Astronomy"},"itemCount":4,"items":[{"th":"ดาวฤกษ์","en":"Star"},{"th":"ดาวเคราะห์","en":"Planet"},{"th":"ดาวหาง","en":"Comet"},{"th":"ดาวพุธ","en":"Mercury"}]},{"id":"cat_3_2","name":{"th":"เครื่องครัว","en":"Kitchenware"},"itemCount":4,"items":[{"th":"กระทะ","en":"Pan"},{"th":"เครื่องชั่ง","en":"Scale"},{"th":"ส้อม","en":"Fork"},{"th":"ชาม","en":"Bowl"}]},{"id":"cat_3_3","name":{"th":"ดนตรีสากล","en":"Music"},"itemCount":4,"items":[{"th":"หย่องเครื่องดนตรี","en":"Bridge"},{"th":"แผ่นเสียง","en":"Record"},{"th":"กลอง","en":"Drum"},{"th":"ขลุ่ย","en":"Flute"}]},{"id":"cat_3_4","name":{"th":"แมลง","en":"Insects"},"itemCount":4,"items":[{"th":"มด","en":"Ant"},{"th":"ผึ้ง","en":"Bee"},{"th":"แมลงวัน","en":"Fly"},{"th":"จิ้งหรีด","en":"Cricket"}]},{"id":"cat_3_5","name":{"th":"กายวิภาคศาสตร์มนุษย์","en":"Human Anatomy"},"itemCount":4,"items":[{"th":"อวัยวะ","en":"Organ"},{"th":"หน้าอก","en":"Chest"},{"th":"ขมับ","en":"Temple"},{"th":"ฝ่ามือ","en":"Palm"}]}]},{"level":4,"totalMoves":100,"categories":[{"id":"cat_4_1","name":{"th":"งานระบบประปา","en":"Plumbing"},"itemCount":5,"items":[{"th":"ท่อ","en":"Pipe"},{"th":"วาล์ว","en":"Valve"},{"th":"ก๊อกน้ำ","en":"Tap"},{"th":"ถังเก็บน้ำ","en":"Tank"},{"th":"ท่อระบายน้ำ","en":"Drain"}]},{"id":"cat_4_2","name":{"th":"ลักษณะทางภูมิศาสตร์","en":"Geographic Features"},"itemCount":5,"items":[{"th":"แอ่งกระทะ","en":"Basin"},{"th":"แหลม","en":"Cape"},{"th":"หุบเขาลึก","en":"Canyon"},{"th":"อ่าว","en":"Gulf"},{"th":"ยอดเขา","en":"Peak"}]},{"id":"cat_4_3","name":{"th":"งานตัดเย็บเสื้อผ้า","en":"Tailoring"},"itemCount":5,"items":[{"th":"ด้าย","en":"Thread"},{"th":"เข็ม","en":"Needle"},{"th":"แบบตัดเสื้อ","en":"Pattern"},{"th":"กรรไกรตัดผ้า","en":"Shears"},{"th":"ตะขอเสื้อ","en":"Hook"}]},{"id":"cat_4_4","name":{"th":"หมากรุกสากล","en":"Chess Elements"},"itemCount":5,"items":[{"th":"กระดาน","en":"Board"},{"th":"ลูกเต๋า","en":"Die"},{"th":"ตัวหมาก","en":"Tile"},{"th":"บิชอป","en":"Bishop"},{"th":"อัศวิน","en":"Knight"}]},{"id":"cat_4_5","name":{"th":"ส่วนประกอบรถยนต์","en":"Automotive Parts"},"itemCount":5,"items":[{"th":"ฝากระโปรงหน้า","en":"Hood"},{"th":"ที่เก็บของท้ายรถ","en":"Trunk"},{"th":"กันชน","en":"Bumper"},{"th":"บังโคลน","en":"Fender"},{"th":"ล้อ","en":"Wheel"}]}]},{"level":5,"totalMoves":110,"categories":[{"id":"cat_5_1","name":{"th":"อุปกรณ์สำนักงาน","en":"Office Supplies"},"itemCount":4,"items":[{"th":"คลิปหนีบกระดาษ","en":"Clip"},{"th":"เครื่องเย็บกระดาษ","en":"Stapler"},{"th":"แฟ้มห่วง","en":"Binder"},{"th":"ยางลบ","en":"Rubber"}]},{"id":"cat_5_2","name":{"th":"เทคโนโลยีดิจิทัล","en":"Digital Tech"},"itemCount":4,"items":[{"th":"เราเตอร์","en":"Router"},{"th":"แบนด์วิดท์","en":"Bandwidth"},{"th":"โปรโตคอล","en":"Protocol"},{"th":"แคช","en":"Cache"}]},{"id":"cat_5_3","name":{"th":"กฎหมายอาญา","en":"Criminal Law"},"itemCount":4,"items":[{"th":"โจทก์","en":"Plaintiff"},{"th":"หมาย","en":"Warrant"},{"th":"คณะลูกขุน","en":"Jury"},{"th":"ทนาย","en":"Counsel"}]},{"id":"cat_5_4","name":{"th":"สัตว์ขา 6","en":"Six-Legged Animals"},"itemCount":4,"items":[{"th":"ด้วง","en":"Beetle"},{"th":"ตั๊กแตน","en":"Locust"},{"th":"ต่อ","en":"Wasp"},{"th":"มวน","en":"Bug"}]},{"id":"cat_5_5","name":{"th":"วรรณกรรมไทย","en":"Thai Literature"},"itemCount":4,"items":[{"th":"รามเกียรติ์","en":"Ramakien"},{"th":"ขุนช้างขุนแผน","en":"Khun Chang"},{"th":"ไตรภูมิ","en":"Traiphum"},{"th":"มหาเวสสันดร","en":"Mahachat"}]},{"id":"cat_5_6","name":{"th":"ส่วนประกอบกล้องถ่ายรูป","en":"Camera Parts"},"itemCount":4,"items":[{"th":"ชัตเตอร์","en":"Shutter"},{"th":"รูรับแสง","en":"Aperture"},{"th":"เลนส์","en":"Lens"},{"th":"ตัวรับแสง","en":"Sensor"}]}]},{"level":6,"totalMoves":120,"categories":[{"id":"cat_6_1","name":{"th":"โครงสร้างสะพาน","en":"Bridge Engineering"},"itemCount":5,"items":[{"th":"เสาตอม่อ","en":"Pier"},{"th":"โค้งสะพาน","en":"Arch"},{"th":"ช่วงกลาง","en":"Span"},{"th":"สลักพ็อก","en":"Pin"},{"th":"โครงเหล็ก","en":"Truss"}]},{"id":"cat_6_2","name":{"th":"ชีวเคมีเซลล์","en":"Cell Biology"},"itemCount":5,"items":[{"th":"เยื่อหุ้มเซลล์","en":"Membrane"},{"th":"นิวเคลียส","en":"Nucleus"},{"th":"ไรโบโซม","en":"Ribosome"},{"th":"ไมโตคอนเดรีย","en":"Mitochondria"},{"th":"คลอโรพลาสต์","en":"Chloroplast"}]},{"id":"cat_6_3","name":{"th":"กระบวนการพิมพ์","en":"Printing Process"},"itemCount":5,"items":[{"th":"แม่พิมพ์","en":"Plate"},{"th":"น้ำหมึกพิมพ์","en":"Ink"},{"th":"แกนหมุน","en":"Drum"},{"th":"กระดาษรับพิมพ์","en":"Stock"},{"th":"รอบพิมพ์","en":"Run"}]},{"id":"cat_6_4","name":{"th":"ปรัชญาตะวันตก","en":"Western Philosophy"},"itemCount":5,"items":[{"th":"จริยศาสตร์","en":"Ethics"},{"th":"ญาณวิทยา","en":"Epistemology"},{"th":"อภิปรัชญา","en":"Metaphysics"},{"th":"ตรรกศาสตร์","en":"Logic"},{"th":"สุนทรียศาสตร์","en":"Aesthetics"}]},{"id":"cat_6_5","name":{"th":"อุตุนิยมวิทยาทะเล","en":"Marine Meteorology"},"itemCount":5,"items":[{"th":"คลื่นพายุ","en":"Surge"},{"th":"หมอกเกลือ","en":"Mist"},{"th":"ความเร็วลม","en":"Gust"},{"th":"คลื่นน้ำขึ้น","en":"Swell"},{"th":"กระแสน้ำ","en":"Current"}]},{"id":"cat_6_6","name":{"th":"เครื่องมือดนตรีไทย","en":"Thai Instruments"},"itemCount":5,"items":[{"th":"ระนาด","en":"Ranat"},{"th":"ซอ","en":"Saw"},{"th":"ฉิ่ง","en":"Ching"},{"th":"กลองทัด","en":"Thad"},{"th":"ขิม","en":"Khim"}]}]},{"level":7,"totalMoves":130,"categories":[{"id":"cat_7_1","name":{"th":"สถาปัตยกรรมไทย","en":"Thai Architecture"},"itemCount":5,"items":[{"th":"ช่อฟ้า","en":"Chofa"},{"th":"บัวหัวเสา","en":"Capital"},{"th":"หน้าบัน","en":"Gable"},{"th":"เครื่องยอด","en":"Spire"},{"th":"กาแล","en":"Kalae"}]},{"id":"cat_7_2","name":{"th":"กระบวนการผลิตเบียร์","en":"Brewing Process"},"itemCount":5,"items":[{"th":"มอลต์","en":"Malt"},{"th":"ยีสต์","en":"Yeast"},{"th":"ฮอปส์","en":"Hops"},{"th":"หม้อต้ม","en":"Kettle"},{"th":"ถังหมัก","en":"Fermentor"}]},{"id":"cat_7_3","name":{"th":"ระบบประสาทส่วนกลาง","en":"Nervous System"},"itemCount":5,"items":[{"th":"เซลล์ประสาท","en":"Neuron"},{"th":"แกนนำสัญญาณ","en":"Axon"},{"th":"ปลายประสาท","en":"Dendrite"},{"th":"สารสื่อประสาท","en":"Transmitter"},{"th":"ไขสันหลัง","en":"Spinal Cord"}]},{"id":"cat_7_4","name":{"th":"เทคนิคการถ่ายภาพ","en":"Photography Techniques"},"itemCount":5,"items":[{"th":"การเปิดรับแสง","en":"Exposure"},{"th":"ความชัดลึก","en":"Depth"},{"th":"ไวต์บาลานซ์","en":"Balance"},{"th":"ค่า ISO","en":"ISO"},{"th":"ระยะโฟกัส","en":"Focus"}]},{"id":"cat_7_5","name":{"th":"ระบบกฎหมายแพ่ง","en":"Civil Law"},"itemCount":5,"items":[{"th":"สัญญา","en":"Contract"},{"th":"ความผิด","en":"Tort"},{"th":"ทรัพย์สิน","en":"Property"},{"th":"มรดก","en":"Inheritance"},{"th":"นิติบุคคล","en":"Entity"}]},{"id":"cat_7_6","name":{"th":"ปฏิกิริยานิวเคลียร์","en":"Nuclear Physics"},"itemCount":5,"items":[{"th":"นิวตรอน","en":"Neutron"},{"th":"โปรตอน","en":"Proton"},{"th":"อิเล็กตรอน","en":"Electron"},{"th":"ฟิชชัน","en":"Fission"},{"th":"ฟิวชัน","en":"Fusion"}]}]},{"level":8,"totalMoves":150,"categories":[{"id":"cat_8_1","name":{"th":"การเดินเรือโบราณ","en":"Ancient Navigation"},"itemCount":4,"items":[{"th":"เข็มทิศ","en":"Compass"},{"th":"กระดานดาว","en":"Astrolabe"},{"th":"ใบเรือ","en":"Sail"},{"th":"หางเสือ","en":"Rudder"}]},{"id":"cat_8_2","name":{"th":"ตลาดหุ้น","en":"Stock Market"},"itemCount":4,"items":[{"th":"กราฟราคา","en":"Chart"},{"th":"ปริมาณซื้อขาย","en":"Volume"},{"th":"ราคาเปิด","en":"Open"},{"th":"ราคาปิด","en":"Close"}]},{"id":"cat_8_3","name":{"th":"วิชาภาษาศาสตร์","en":"Linguistics"},"itemCount":4,"items":[{"th":"สัทศาสตร์","en":"Phonetics"},{"th":"วากยสัมพันธ์","en":"Syntax"},{"th":"ความหมายศาสตร์","en":"Semantics"},{"th":"วจนะ","en":"Morpheme"}]},{"id":"cat_8_4","name":{"th":"สัญกรณ์ดนตรี","en":"Music Notation"},"itemCount":4,"items":[{"th":"ห้องดนตรี","en":"Bar"},{"th":"ตัวหยุดเสียง","en":"Rest"},{"th":"บันไดเสียง","en":"Scale"},{"th":"บรรทัดห้าเส้น","en":"Staff"}]},{"id":"cat_8_5","name":{"th":"ท่าอากาศยานการบิน","en":"Aviation"},"itemCount":4,"items":[{"th":"ห้องโดยสาร","en":"Cabin"},{"th":"สถานีปลายทาง","en":"Terminal"},{"th":"ประตูทางเข้าเครื่อง","en":"Gate"},{"th":"นักบินอวกาศ","en":"Pilot"}]},{"id":"cat_8_6","name":{"th":"วิศวกรรมเหมืองแร่","en":"Mining"},"itemCount":4,"items":[{"th":"ปล่องใต้ดิน","en":"Shaft"},{"th":"สายแร่ธรรมชาติ","en":"Vein"},{"th":"บ่อหลุมเปิดกว้าง","en":"Pit"},{"th":"แร่ดิบสะสม","en":"Ore"}]},{"id":"cat_8_7","name":{"th":"พฤกษศาสตร์กายวิภาค","en":"Botany"},"itemCount":4,"items":[{"th":"หน่ออ่อนไม้","en":"Shoot"},{"th":"ลำต้นทอดยอด","en":"Runner"},{"th":"ข้อปล้องกิ่ง","en":"Node"},{"th":"แผ่นผิวใบ","en":"Blade"}]}]},{"level":9,"totalMoves":160,"categories":[{"id":"cat_9_1","name":{"th":"ภูมิอากาศวิทยา","en":"Meteorology"},"itemCount":5,"items":[{"th":"แนวลมปะทะ","en":"Front"},{"th":"กระแสไหลวนกลม","en":"Cell"},{"th":"ร่องความกดต่ำ","en":"Trough"},{"th":"ศูนย์กลางพายุ","en":"Eye"},{"th":"พายุโซนร้อนต่ำ","en":"Depression"}]},{"id":"cat_9_2","name":{"th":"สรีรวิทยาหัวใจ","en":"Cardiology"},"itemCount":5,"items":[{"th":"หลอดเลือดแดงหลัก","en":"Artery"},{"th":"ห้องบนหัวใจ","en":"Atrium"},{"th":"ส่วนปลายยอดแหลม","en":"Apex"},{"th":"กลุ่มเส้นประสาทคุม","en":"Node"},{"th":"รอบกระบวนการเต้น","en":"Cycle"}]},{"id":"cat_9_3","name":{"th":"ปฏิกิริยาเคมี","en":"Chemistry"},"itemCount":5,"items":[{"th":"แรงดึงเหนี่ยว","en":"Bond"},{"th":"สารไอออนรับโปรตอน","en":"Base"},{"th":"ธาตุพื้นฐาน","en":"Element"},{"th":"ชั้นระดับพลังงาน","en":"Shell"},{"th":"ตัวสมานละลาย","en":"Solution"}]},{"id":"cat_9_4","name":{"th":"องค์ประกอบสถาปัตย์","en":"Architecture"},"itemCount":5,"items":[{"th":"ซุ้มประตูกึ่งโค้ง","en":"Arch"},{"th":"เสารูปทรงกลม","en":"Column"},{"th":"หัวยอดเสาปั้น","en":"Capital"},{"th":"ระยะห่างตอม่อ","en":"Span"},{"th":"หลังคาอุโมงค์โค้ง","en":"Vault"}]},{"id":"cat_9_5","name":{"th":"มาตรการเดินเรือทะเล","en":"Nautical"},"itemCount":5,"items":[{"th":"ความเร็วปมทะลุ","en":"Knot"},{"th":"ระดับกินน้ำลึกเรือ","en":"Draft"},{"th":"เครื่องบันทึกปูม","en":"Log"},{"th":"สะพานสั่งการเรือ","en":"Bridge"},{"th":"สมุดบันทึกหลักฐาน","en":"Logbook"}]},{"id":"cat_9_6","name":{"th":"โครงสร้างธรณีวิทยา","en":"Geology"},"itemCount":5,"items":[{"th":"ชั้นตะกอนรากเรียง","en":"Bed"},{"th":"รอยต่อเปลือกเลื่อน","en":"Fault"},{"th":"หินพับคดโค้ง","en":"Fold"},{"th":"ส่วนกึ่งกลางภิภพ","en":"Core"},{"th":"เปลือกโลกชั้นดิน","en":"Crust"}]},{"id":"cat_9_7","name":{"th":"การพิมพ์และการออกแบบอักษร","en":"Typography"},"itemCount":5,"items":[{"th":"หน้าตัวอักษร","en":"Face"},{"th":"เนื้อความหลัก","en":"Body"},{"th":"แผ่นตะกั่วจัดช่อง","en":"Lead"},{"th":"ระยะบีบชิดพยัญชนะ","en":"Kerning"},{"th":"ชุดตระกูลอักษร","en":"Family"}]}]},{"level":10,"totalMoves":200,"categories":[{"id":"cat_10_1","name":{"th":"โครงกระดูกกายวิภาค","en":"Skeletal Anatomy"},"itemCount":5,"items":[{"th":"กระดูกซี่โครงด้านหน้า","en":"Rib"},{"th":"แนวกระดูกสันหลัง","en":"Spine"},{"th":"ข้อต่อกระดูกรวม","en":"Joint"},{"th":"แผ่นระนาบกระดูก","en":"Plate"},{"th":"กระดูกอุโมงค์อกรวม","en":"Cage"}]},{"id":"cat_10_2","name":{"th":"สัญลักษณ์จดบันทึกดนตรี","en":"Music Notation"},"itemCount":5,"items":[{"th":"กุญแจกำหนดเสียง","en":"Clef"},{"th":"เส้นกั้นห้องหลัก","en":"Bar"},{"th":"ตัวสัญลักษณ์พักคำ","en":"Rest"},{"th":"ตัวกลมจับระดับ","en":"Note"},{"th":"เส้นเชื่อมจังหวะยาว","en":"Tie"}]},{"id":"cat_10_3","name":{"th":"แผงวงจรคอมพิวเตอร์","en":"Computing Hardware"},"itemCount":5,"items":[{"th":"แผงวงจรแม่พิมพ์","en":"Board"},{"th":"ช่องต่อกระแสพ่วง","en":"Port"},{"th":"เส้นทางวิ่งชุดคำสั่ง","en":"Bus"},{"th":"หัวอ่านข้อมูลดิสก์","en":"Drive"},{"th":"ชุดชิ้นซิลิคอนประมวลผล","en":"Chip"}]},{"id":"cat_10_4","name":{"th":"ตราสารในตลาดการเงิน","en":"Finance Market"},"itemCount":5,"items":[{"th":"เอกสารพันธบัตรหลวง","en":"Bond"},{"th":"ตั๋วเงินสัญญาสั้น","en":"Bill"},{"th":"ใบถือหุ้นจดทะเบียน","en":"Stock"},{"th":"สิทธิสัดส่วนหุ้นร่วม","en":"Share"},{"th":"สัญญาประกันความเสี่ยง","en":"Option"}]},{"id":"cat_10_5","name":{"th":"ศิลปะการปรุงซอสและอาหาร","en":"Culinary Arts"},"itemCount":5,"items":[{"th":"น้ำเคี่ยวต้มกระดูก","en":"Stock"},{"th":"ซอสข้นเคี่ยวร้อน","en":"Reduction"},{"th":"เปลือกส้มขูดกลิ่นหอม","en":"Zest"},{"th":"แป้งดิบเปียกผสม","en":"Batter"},{"th":"ที่ขูดผักผลไม้เหล็ก","en":"Grater"}]},{"id":"cat_10_6","name":{"th":"โครงสร้างส่วนประกอบพืช","en":"Plant Anatomy"},"itemCount":5,"items":[{"th":"แกนกิ่งต้นไม้","en":"Stem"},{"th":"เยื่อหุ้มรอบนอกเนื้อ","en":"Bark"},{"th":"แนวยอดใบยอดสูงสุด","en":"Crown"},{"th":"ขอบผิวสัมผัสใบไม้","en":"Blade"},{"th":"ยอดอ่อนกำลังแทงดิน","en":"Shoot"}]},{"id":"cat_10_7","name":{"th":"มวลอากาศกลุ่มชั้นเมฆ","en":"Meteorology Advanced"},"itemCount":5,"items":[{"th":"รอยแผ่ลมขั้วปะทะ","en":"Front"},{"th":"ศูนย์กลางตาดีเปรสชัน","en":"Eye"},{"th":"วงเวียนบรรยากาศย่อย","en":"Cell"},{"th":"พื้นที่ความกดต่ำยื่นยวบ","en":"Trough"},{"th":"พายุฝนกระแสหมุน","en":"Depression"}]},{"id":"cat_10_8","name":{"th":"สำนวนคดีและเอกสารชั้นศาล","en":"Law & Courts"},"itemCount":5,"items":[{"th":"สำนวนรับฟ้องศาล","en":"Case"},{"th":"ห้องพิจารณาคดี","en":"Court"},{"th":"คำยื่นร้องฟ้องแพ่ง","en":"Suit"},{"th":"สภาวิชาชีพว่าความ","en":"Bar"},{"th":"หนังสือสรุปความย่อ","en":"Brief"}]}]}]};
+
+let lang='th',allLevels=[],progress={},G=null;
+
+function lsGet(key){
+  try{return localStorage.getItem(key);}catch(e){return null;}
+}
+function lsSet(key,val){
+  try{localStorage.setItem(key,val);}catch(e){}
+}
+
+function fireConfetti(){
+  const opts={particleCount:150,spread:80,origin:{y:0.6}};
+  if(typeof confetti==='function'){confetti(opts);return;}
+  if(document.getElementById('confetti-script'))return;
+  const s=document.createElement('script');
+  s.id='confetti-script';
+  s.src='https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js';
+  s.onload=()=>{if(typeof confetti==='function')confetti(opts);};
+  document.head.appendChild(s);
+}
+
+function convertLevels(data){
+  return data.levels.map(lv=>({
+    id:lv.level,
+    title:{th:`ด่าน ${lv.level}`,en:`Level ${lv.level}`},
+    maxMoves:lv.totalMoves,
+    categories:lv.categories.map(cat=>({id:cat.id,name:cat.name,total:cat.itemCount,items:cat.items}))
+  }));
+}
+
+function init(){
+  const base=convertLevels(LEVEL_DATA);
+  let custom=[];
+  try{
+    const customRaw=lsGet('saj_custom');
+    if(customRaw)custom=JSON.parse(customRaw);
+  }catch(e){custom=[];}
+  const customIds=new Set(custom.map(l=>l.id));
+  
+  allLevels=[...base.filter(l=>!customIds.has(l.id)),...custom];
+  
+  try{
+    const p=lsGet('saj_prog');
+    progress=p?JSON.parse(p):{};
+  }catch(e){progress={};}
+  applyLang();
+  setupDispatch();
+  setupDragEvents();
+  if(!/FBAN|FBAV|Messenger|Instagram|Line\//i.test(navigator.userAgent||'')){
+    document.getElementById('open-hint').style.display='none';
+  }
+}
+
+function setupDispatch(){
+  window.__dispatch=function(el){
+    const act=el.dataset.action;
+    if(!act)return;
+    switch(act){
+      case 'screen': showScreen(el.dataset.screen); break;
+      case 'lang': setLang(el.dataset.lang); break;
+      case 'start': startLevel(+el.dataset.levelId); break;
+      case 'draw': drawCard(); break;
+      case 'hint': useHint(); break;
+      case 'undo': undoMove(); break;
+      case 'extra': useExtra(); break;
+      case 'quit': confirmQuit(); break;
+      case 'slot': slClick(+el.dataset.slot); break;
+      case 'card': cClick(+el.dataset.ci,+el.dataset.idx); break;
+      case 'waste': wClick(); break;
+      case 'col-click': colClick(+el.dataset.col); break;
+      case 'ed-new': edNew(); break;
+      case 'ed-add-cat': edAddCat(); break;
+      case 'ed-save': edSave(); break;
+      case 'ed-cancel': edCancel(); break;
+      case 'ed-edit': edEdit(+el.dataset.levelId); break;
+      case 'ed-del': edDel(+el.dataset.levelId); break;
+      case 'ed-del-cat': edCats.splice(+el.dataset.ci,1);renderEdCats(); break;
+      case 'ed-del-item': edCats[+el.dataset.ci].items.splice(+el.dataset.ii,1);renderEdCats(); break;
+      case 'ed-add-item': edCats[+el.dataset.ci].items.push({th:'',en:''});renderEdCats(); break;
+      case 'ov-retry': closeOv();startLevel(+el.dataset.levelId); break;
+      case 'ov-next': closeOv();startLevel(+el.dataset.levelId); break;
+      case 'ov-menu': closeOv();showScreen('levels'); break;
+      case 'hint-close': document.getElementById('open-hint').style.display='none'; break;
+    }
+  };
+  (window.__actionQueue||[]).forEach(window.__dispatch);
+  window.__actionQueue=[];
+}
+
+function setupDragEvents(){
+  document.addEventListener('dragstart',e=>{
+    const w=e.target.closest('[data-drag="waste"]');
+    if(w){wDS(e);return;}
+    const c=e.target.closest('[data-drag="card"]');
+    if(c)cDS(+c.dataset.ci,+c.dataset.idx,e);
+  },true);
+  document.addEventListener('dragover',e=>{
+    const sl=e.target.closest('[data-slot]');
+    if(sl){e.preventDefault();slDO(+sl.dataset.slot);return;}
+    if(e.target.closest('[data-drag="card"],[data-col]'))e.preventDefault();
+  },true);
+  document.addEventListener('dragleave',e=>{
+    const sl=e.target.closest('[data-slot]');
+    if(sl)slDL(+sl.dataset.slot);
+  },true);
+  document.addEventListener('drop',e=>{
+    const sl=e.target.closest('[data-slot]');
+    if(sl){e.preventDefault();slDrop(+sl.dataset.slot);return;}
+    const card=e.target.closest('[data-drag="card"]');
+    if(card){e.preventDefault();e.stopPropagation();cDrop(+card.dataset.ci,+card.dataset.idx,e);return;}
+    const col=e.target.closest('[data-col]');
+    if(col){e.preventDefault();eColDrop(+col.dataset.col,e);}
+  },true);
+  document.addEventListener('input',e=>{
+    const inp=e.target;
+    if(!inp.dataset.edField)return;
+    const ci=+inp.dataset.ci,ii=inp.dataset.ii;
+    if(inp.dataset.edField==='cat-th')edCats[ci].name.th=inp.value;
+    else if(inp.dataset.edField==='cat-en')edCats[ci].name.en=inp.value;
+    else if(inp.dataset.edField==='item-th')edCats[ci].items[ii].th=inp.value;
+    else if(inp.dataset.edField==='item-en')edCats[ci].items[ii].en=inp.value;
+  },true);
+}
+
+function setLang(l){
+  lang=l;
+  document.querySelectorAll('.lt').forEach(b=>b.classList.toggle('on',b.textContent===l.toUpperCase()));
+  applyLang();
+}
+
+function applyLang(){
+  document.querySelectorAll('[data-th]').forEach(el=>{
+    el.textContent=el.dataset[lang]||el.dataset.th;
+  });
+}
+
+function tl(obj){
+  return obj?(obj[lang]||obj.th||''):''
+}
+
+function showScreen(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s-'+n).classList.add('active');
+  if(n==='levels')renderLvGrid();
+  if(n==='editor')renderEdList();
+}
+
+let toastT;
+function toast(msg,d=2200){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.style.opacity='1';
+  clearTimeout(toastT);
+  toastT=setTimeout(()=>t.style.opacity='0',d);
+}
+
+function renderLvGrid(){
+  document.getElementById('lv-grid').innerHTML=allLevels.map((lv,i)=>{
+    const done=progress[lv.id]?.completed;
+    const cats=lv.categories.map(c=>tl(c.name)).slice(0,2).join(' · ')+'…';
+    return`<div class="lv-c ${done?'done':''}" data-action="start" data-level-id="${lv.id}">
+      <div class="lv-num">${i+1}</div>
+      <div class="lv-name">${cats}</div>
+      <div class="lv-mv">${lv.maxMoves} moves</div>
+      <div class="lv-star">${done?'★★★':''}</div>
+    </div>`;
+  }).join('');
+}
+
+function startLevel(id){
+  const lv=allLevels.find(l=>l.id===id);
+  if(!lv){toast('ไม่พบด่าน');return;}
+  if(!progress[id])progress[id]={};
+  progress[id].attempted=true;
+  saveProg();
+  
+  let allCards=[];
+  lv.categories.forEach(cat=>{
+    allCards.push({uid:'cat_'+cat.id,type:'cat',catId:cat.id,name:cat.name,total:cat.total,faceUp:false});
+    cat.items.forEach((item,ii)=>allCards.push({uid:'itm_'+cat.id+'_'+ii,type:'item',catId:cat.id,text:item,faceUp:false}));
+  });
+  shuffle(allCards);
+  
+  // Always 4 tableau columns, sizes depend on level
+  const lvNum = allLevels.indexOf(lv) + 1;
+  const colSizes = lvNum <= 2 ? [2, 3, 4, 5] : lvNum <= 5 ? [3, 4, 5, 6] : [4, 5, 6, 7];
+  const NUM_COLS = 4;
+  const cols=[];
+  for(let i=0; i<NUM_COLS; i++) cols.push([]);
+  
+  let cardIdx = 0;
+  for (let c = 0; c < NUM_COLS; c++) {
+    const size = colSizes[c];
+    for (let j = 0; j < size && cardIdx < allCards.length; j++) {
+      cols[c].push({ ...allCards[cardIdx] });
+      cardIdx++;
+    }
+  }
+  cols.forEach(col=>{if(col.length)col[col.length-1].faceUp=true;});
+  const tabCount = cardIdx;
+  
+  G={
+    levelId:id,
+    level:lv,
+    movesLeft:lv.maxMoves,
+    cols,
+    drawPile:allCards.slice(tabCount).map(c=>({...c})),
+    waste:[], // changed from wasteCard object to waste stack array to prevent card loss
+    slots:lv.categories.map(cat=>({catId:cat.id,catCard:null,placed:[],total:cat.total,complete:false})),
+    hints:3,
+    undos:3,
+    extras:1,
+    history:[],
+    selected:null
+  };
+  
+  document.getElementById('g-ttl').textContent=`Level ${allLevels.indexOf(lv)+1}`;
+  showScreen('game');
+  renderGame();
+}
+
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+}
+
+function getCategoryGroupStartIdx(col, idx) {
+  if (idx < 0 || idx >= col.length) return idx;
+  const targetCatId = col[idx].catId;
+  let startIdx = idx;
+  while (startIdx > 0) {
+    const prevCard = col[startIdx - 1];
+    if (prevCard.faceUp && prevCard.catId === targetCatId) {
+      startIdx--;
+    } else {
+      break;
+    }
+  }
+  return startIdx;
+}
+
+function checkAndAutoCompleteCategories() {
+  // Auto-complete disabled: player must manually drag cards to slots
+}
+
+const CARD_H=84,OFF_DOWN=16,OFF_UP=26;
+
+function renderGame(){
+  if(!G)return;
+  document.getElementById('g-mv').textContent=G.movesLeft;
+  document.getElementById('draw-cnt').textContent=G.drawPile.length;
+  document.getElementById('draw-el').style.opacity=(G.drawPile.length===0&&G.waste.length===0)?'0.35':'1';
+  
+  // Show refill icon in draw pile if empty but waste pile has cards
+  const drawEl=document.getElementById('draw-el');
+  if(G.drawPile.length===0&&G.waste.length>0){
+    drawEl.querySelector('.draw-face').innerHTML='<div class="draw-pat" style="font-size:1.4rem;color:#fbbf24;">♻</div>';
+  } else {
+    drawEl.querySelector('.draw-face').innerHTML='<div class="draw-pat">◆</div>';
+  }
+  
+  renderSlots();
+  renderTableau();
+  renderWaste();
+}
+
+function renderSlots(){
+  const VISIBLE_SLOTS = 4;
+  document.getElementById('slots-row').style.gridTemplateColumns=`repeat(${VISIBLE_SLOTS}, 1fr)`;
+  const displaySlots = G.slots.slice(0, VISIBLE_SLOTS);
+  while (displaySlots.length < VISIBLE_SLOTS) displaySlots.push(null);
+  document.getElementById('slots-row').innerHTML=displaySlots.map((sl,si)=>{
+    if(sl===null)return`<div class="slot"><div class="slot-crown-ico">👑</div></div>`;
+    if(sl.complete)return`<div class="slot done-sl"><div style="font-size:1.5rem">✅</div><div class="slot-name">${tl(sl.catCard?.name)}</div></div>`;
+    if(sl.catCard)return`<div class="slot occupied" id="sl-${si}" data-slot="${si}" data-action="slot">
+      <div class="slot-inner"><div style="font-size:.6rem;color:var(--text-gold);font-weight:700">${sl.placed.length}/${sl.total} 👑</div>
+      <div style="color:var(--crown);font-size:.95rem">👑</div>
+      <div class="slot-name">${tl(sl.catCard.name)}</div></div></div>`;
+    return`<div class="slot" id="sl-${si}" data-slot="${si}" data-action="slot">
+      <div class="slot-crown-ico">👑</div></div>`;
+  }).join('');
+}
+
+function renderTableau(){
+  document.getElementById('tableau').style.gridTemplateColumns=`repeat(4, 1fr)`;
+  document.getElementById('tableau').innerHTML=G.cols.map((col,ci)=>{
+    let y=0,totalH=CARD_H;
+    const cards=col.map((card,idx)=>{
+      if(idx>0)y+=(col[idx-1].faceUp?OFF_UP:OFF_DOWN);
+      totalH=y+CARD_H;
+      const sel=G.selected?.source==='col'&&G.selected.colIdx===ci&&idx>=G.selected.cardIdx;
+      if(!card.faceUp)return`<div class="card-el" style="top:${y}px;height:${CARD_H}px;z-index:${idx}"><div class="cb" style="height:${CARD_H}px"><div class="cb-pat"></div></div></div>`;
+      const isCat=card.type==='cat';
+      const txt=isCat?tl(card.name):tl(card.text);
+      const fs=txt.length>10?'.56rem':txt.length>7?'.63rem':'.73rem';
+      return`<div class="card-el" style="top:${y}px;height:${CARD_H}px;z-index:${10+idx}" draggable="true" data-drag="card" data-ci="${ci}" data-idx="${idx}" data-action="card">
+        <div class="cf ${isCat?'cat-f':''} ${sel?'sel-f':''}" style="height:${CARD_H}px;font-size:${fs}">
+          ${txt}${isCat?`<div class="cat-badge">0/${card.total} 👑</div>`:''}
+        </div></div>`;
+    }).join('');
+    return`<div class="col" style="height:${totalH+8}px" id="col-${ci}" data-col="${ci}" data-action="col-click">
+      <div class="col-inner" style="position:relative;height:100%">${cards}</div></div>`;
+  }).join('');
+}
+
+function renderWaste(){
+  const ws=document.getElementById('waste-strip');
+  if(!G.waste.length){ws.innerHTML='';return;}
+  const c=G.waste[G.waste.length-1],isCat=c.type==='cat',txt=isCat?tl(c.name):tl(c.text),sel=G.selected?.source==='waste';
+  const fs=txt.length>10?'.56rem':txt.length>7?'.63rem':'.73rem';
+  const lockBadge = isCat ? `<div style="font-size:0.55rem;color:#ef4444;font-weight:700;margin-top:2px;">🔒 ${lang==='th'?'ต้องลงกองเล่นก่อน':'Move to column first'}</div>` : '';
+  ws.innerHTML=`<div class="waste-card-el" draggable="true" data-drag="waste" data-action="waste">
+    <div class="waste-face ${isCat?'is-cat':''} ${sel?'sel':''}" style="font-size:${fs}">
+      ${txt}${isCat?`<br><span style="font-size:.5rem;color:var(--text-gold)">👑 0/${c.total}</span>`:''}
+      ${lockBadge}
+    </div></div>`;
+}
+
+function drawCard(){
+  if(!G)return;
+  if(G.drawPile.length===0&&G.waste.length===0){toast(lang==='th'?'ไพ่หมดกอง':'Deck empty');return;}
+  
+  if(G.drawPile.length===0){
+    saveHist();
+    // Recycle full waste stack (reversed so original drawing order is restored)
+    G.drawPile=[...G.waste].reverse().map(c=>({...c,faceUp:false}));
+    G.waste=[];
+    spendMove();
+    toast(lang==='th'?'♻ สลับกองไพ่':'♻ Stock restored');
+    renderGame();
+    return;
+  }
+  
+  saveHist();
+  const c=G.drawPile.pop();
+  c.faceUp=true;
+  G.waste.push(c);
+  G.selected=null;
+  spendMove();
+  renderGame();
+}
+
+function cDS(ci,idx,e){
+  const col = G.cols[ci];
+  const groupIdx = getCategoryGroupStartIdx(col, idx);
+  const card = col[groupIdx];
+  // Prevent dragging face-down cards
+  if(!card.faceUp){e.preventDefault();return;}
+  G.selected={source:'col',colIdx:ci,cardIdx:groupIdx};
+  e.dataTransfer.effectAllowed='move';
+}
+
+function wDS(e){
+  if(!G.waste.length){e.preventDefault();return;}
+  G.selected={source:'waste'};
+  e.dataTransfer.effectAllowed='move';
+}
+
+function cDrop(ci,idx,e){
+  e.preventDefault();
+  e.stopPropagation();
+  tryMove({dest:'col',colIdx:ci,cardIdx:idx});
+}
+
+function eColDrop(ci,e){
+  e.preventDefault();
+  if(!G.selected)return;
+  const col = G.cols[ci];
+  if(col.length===0){
+    tryMove({dest:'col',colIdx:ci,cardIdx:-1});
+  } else {
+    tryMove({dest:'col',colIdx:ci,cardIdx:col.length-1});
+  }
+}
+
+function slDO(si){document.getElementById('sl-'+si)?.classList.add('drag-hi');}
+function slDL(si){document.getElementById('sl-'+si)?.classList.remove('drag-hi');}
+function slDrop(si){
+  document.getElementById('sl-'+si)?.classList.remove('drag-hi');
+  tryMove({dest:'slot',slotIdx:si});
+}
+
+function slClick(si){
+  if(G.selected)tryMove({dest:'slot',slotIdx:si});
+}
+
+function wClick(){
+  if(!G.waste.length)return;
+  if(G.selected?.source==='waste'){G.selected=null;renderGame();return;}
+  G.selected={source:'waste'};
+  renderGame();
+}
+
+function cClick(ci,idx){
+  const col = G.cols[ci];
+  const groupIdx = getCategoryGroupStartIdx(col, idx);
+  const card = col[groupIdx];
+  if(!card.faceUp)return;
+  if(G.selected){
+    if(G.selected.source==='col'&&G.selected.colIdx===ci&&G.selected.cardIdx===groupIdx){
+      G.selected=null;
+      renderGame();
+      return;
+    }
+    tryMove({dest:'col',colIdx:ci,cardIdx:col.length-1});
+    return;
+  }
+  G.selected={source:'col',colIdx:ci,cardIdx:groupIdx};
+  renderGame();
+}
+
+function colClick(ci){
+  if(!G.selected)return;
+  const col = G.cols[ci];
+  if(col.length===0){
+    tryMove({dest:'col',colIdx:ci,cardIdx:-1});
+  } else {
+    tryMove({dest:'col',colIdx:ci,cardIdx:col.length-1});
+  }
+}
+
+function tryMove(dest){
+  if(!G.selected)return;
+  const sel=G.selected;
+  
+  // If moving from a column to the same column, ignore the move (prevent disappearing card bug)
+  if(sel.source==='col'&&dest.dest==='col'&&sel.colIdx===dest.colIdx){
+    G.selected=null;
+    renderGame();
+    return;
+  }
+  
+  let moving=sel.source==='waste'?[G.waste[G.waste.length-1]]:G.cols[sel.colIdx].slice(sel.cardIdx);
+  if(!moving.length)return;
+  const top=moving[0];
+  
+  if(dest.dest==='slot'){
+    const sl=G.slots[dest.slotIdx];
+    if(sl.complete){G.selected=null;renderGame();return;}
+    
+    const catCard = moving.find(c => c.type === 'cat');
+    const itemCards = moving.filter(c => c.type === 'item');
+    const groupCatId = moving[0].catId;
+    
+    if (sl.catCard) {
+      if (groupCatId !== sl.catCard.catId) {
+        toast(lang==='th'?'❌ ไม่ตรงหมวด':'❌ Wrong category');
+        G.selected=null;
+        renderGame();
+        return;
+      }
+    } else {
+      if (!catCard) {
+        toast(lang==='th'?'วาง Category ก่อน':'Place category first');
+        G.selected=null;
+        renderGame();
+        return;
+      }
+      // Allow cat card from waste to go directly to slot (bug 1 fix)
+    }
+    
+    saveHist();
+    if (!sl.catCard) {
+      sl.catCard = catCard;
+    }
+    itemCards.forEach(item => {
+      if (!sl.placed.some(p => p.uid === item.uid)) {
+        sl.placed.push(item);
+      }
+    });
+    
+    removeFromSrc(sel);
+    flipTop(sel);
+    
+    if (sl.placed.length >= sl.total) {
+      sl.complete = true;
+      toast(`✅ ${tl(sl.catCard.name)} ${lang==='th'?'สำเร็จ!':'complete!'}`);
+    }
+    
+    spendMove();
+    G.selected=null;
+    checkAndAutoCompleteCategories();
+    renderGame();
+    checkWin();
+    return;
+  }
+  
+  if(dest.dest==='col'){
+    const dCol=G.cols[dest.colIdx];
+    if(dCol.length===0||dest.cardIdx===-1){
+      if(dCol.length!==0){G.selected=null;renderGame();return;}
+      saveHist();
+      moving.forEach(c=>c.faceUp=true);
+      dCol.push(...moving);
+      removeFromSrc(sel);
+      flipTop(sel);
+      spendMove();
+      G.selected=null;
+      checkAndAutoCompleteCategories();
+      renderGame();
+      checkWin();
+      return;
+    }
+    const dCard=dCol[dest.cardIdx];
+    if(!dCard?.faceUp||dest.cardIdx!==dCol.length-1){G.selected=null;renderGame();return;}
+    if(top.catId!==dCard.catId){toast(lang==='th'?'❌ ไม่ตรงหมวด':'❌ Wrong category');G.selected=null;renderGame();return;}
+    saveHist();
+    moving.forEach(c=>c.faceUp=true);
+    dCol.push(...moving);
+    removeFromSrc(sel);
+    flipTop(sel);
+    spendMove();
+    G.selected=null;
+    checkAndAutoCompleteCategories();
+    renderGame();
+    checkWin();
+    return;
+  }
+}
+
+function removeFromSrc(sel){
+  if(sel.source==='waste'){
+    G.waste.pop();
+    return;
+  }
+  const col=G.cols[sel.colIdx];
+  col.splice(sel.cardIdx,col.length-sel.cardIdx);
+}
+
+function flipTop(sel){
+  if(sel.source!=='col')return;
+  const col=G.cols[sel.colIdx];
+  if(col.length>0&&!col[col.length-1].faceUp)col[col.length-1].faceUp=true;
+}
+
+function spendMove(){
+  G.movesLeft--;
+  if(G.movesLeft<=0&&!checkAllDone())setTimeout(()=>showResult(false),400);
+}
+
+function checkAllDone(){
+  return G.slots.every(s=>s.complete);
+}
+
+function checkWin(){
+  if(checkAllDone())setTimeout(()=>showResult(true),350);
+}
+
+function saveHist(){
+  G.history.push(JSON.parse(JSON.stringify({
+    cols:G.cols,
+    slots:G.slots,
+    drawPile:G.drawPile,
+    waste:G.waste,
+    movesLeft:G.movesLeft
+  })));
+  if(G.history.length>10)G.history.shift();
+}
+
+function undoMove(){
+  if(!G.history.length){toast(lang==='th'?'ไม่มีให้ย้อน':'Nothing to undo');return;}
+  const p=G.history.pop();
+  G.cols=p.cols;
+  G.slots=p.slots;
+  G.drawPile=p.drawPile;
+  G.waste=p.waste;
+  G.movesLeft=p.movesLeft;
+  // Undos are now unlimited!
+  G.selected=null;
+  renderGame();
+}
+
+function useHint(){
+  // Hints are now unlimited!
+  for(const col of G.cols){
+    for(let i=col.length-1;i>=0;i--){
+      const c=col[i];
+      if(c.faceUp&&c.type==='item'){
+        const cat=G.level.categories.find(x=>x.id===c.catId);
+        toast(`💡 "${tl(c.text)}" → ${tl(cat?.name)}`);
+        renderGame();
+        return;
+      }
+    }
+  }
+  const topWaste=G.waste[G.waste.length-1];
+  if(topWaste?.type==='item'){
+    const cat=G.level.categories.find(x=>x.id===topWaste.catId);
+    toast(`💡 "${tl(topWaste.text)}" → ${tl(cat?.name)}`);
+    renderGame();
+    return;
+  }
+  toast(lang==='th'?'ไม่พบคำใบ้':'No hint found');
+}
+
+function useExtra(){
+  // Extra moves are now unlimited!
+  G.movesLeft+=20;
+  toast('+20 Moves! 🌟');
+  renderGame();
+}
+
+function showResult(win){
+  const lvIdx=allLevels.findIndex(l=>l.id===G.levelId);
+  if(win){
+    progress[G.levelId].completed=true;
+    saveProg();
+    fireConfetti();
+  }
+  document.getElementById('ov-ico').textContent=win?'🏆':'💔';
+  document.getElementById('ov-t').textContent=win?(lang==='th'?'ยอดเยี่ยม! 🎉':'Excellent! 🎉'):(lang==='th'?'หมด Moves':'Out of Moves');
+  document.getElementById('ov-m').textContent=win?`${lang==='th'?'ใช้ไป':'Used'} ${G.level.maxMoves-G.movesLeft} moves`:(lang==='th'?'ลองใหม่อีกครั้ง!':'Try again!');
+  document.getElementById('ov-btns').innerHTML=`
+    <button type="button" class="ov-b ov-gray" data-action="ov-retry" data-level-id="${G.levelId}">${lang==='th'?'↩ ลองใหม่':'↩ Retry'}</button>
+    ${win&&lvIdx<allLevels.length-1?`<button type="button" class="ov-b ov-gold" data-action="ov-next" data-level-id="${allLevels[lvIdx+1].id}">${lang==='th'?'ด่านต่อไป →':'Next Level →'}</button>`:''}
+    <button type="button" class="ov-b ov-gray" data-action="ov-menu">${lang==='th'?'เมนู':'Menu'}</button>`;
+  document.getElementById('ov').style.display='flex';
+}
+
+function closeOv(){
+  document.getElementById('ov').style.display='none';
+}
+
+function confirmQuit(){
+  if(confirm(lang==='th'?'ออกจากด่านนี้?':'Quit?'))showScreen('levels');
+}
+
+function saveProg(){
+  lsSet('saj_prog',JSON.stringify(progress));
+}
+
+function saveCustom(){
+  lsSet('saj_custom',JSON.stringify(allLevels.filter(l=>l._custom)));
+}
+
+let edEditId=null,edCats=[];
+
+function renderEdList(){
+  document.getElementById('ed-list').style.display='block';
+  document.getElementById('ed-form').style.display='none';
+  document.getElementById('ed-list').innerHTML=allLevels.map(lv=>`
+    <div class="lv-li">
+      <div>
+        <div class="lv-li-name">${tl(lv.title)}</div>
+        <div class="lv-li-info">${lv.maxMoves} moves · ${lv.categories.length} หมวด</div>
+      </div>
+      <button type="button" class="back-btn" data-action="ed-edit" data-level-id="${lv.id}" style="font-size:.72rem">แก้ไข</button>
+      ${lv._custom?`<button type="button" class="back-btn" data-action="ed-del" data-level-id="${lv.id}" style="font-size:.72rem;background:rgba(180,30,30,.4)">ลบ</button>`:''}
+    </div>`).join('');
+}
+
+function edNew(){
+  edEditId=null;
+  edCats=[{id:'c1',name:{th:'',en:''},items:[{th:'',en:''}]}];
+  document.getElementById('ei-th').value='';
+  document.getElementById('ei-en').value='';
+  document.getElementById('ei-mv').value='80';
+  document.getElementById('ei-id').value='';
+  document.getElementById('ed-list').style.display='none';
+  document.getElementById('ed-form').style.display='block';
+  renderEdCats();
+}
+
+function edEdit(id){
+  const lv=allLevels.find(l=>l.id===id);
+  if(!lv)return;
+  edEditId=id;
+  edCats=JSON.parse(JSON.stringify(lv.categories));
+  document.getElementById('ei-th').value=lv.title.th||'';
+  document.getElementById('ei-en').value=lv.title.en||'';
+  document.getElementById('ei-mv').value=lv.maxMoves;
+  document.getElementById('ei-id').value=lv.id;
+  document.getElementById('ed-list').style.display='none';
+  document.getElementById('ed-form').style.display='block';
+  renderEdCats();
+}
+
+function edDel(id){
+  if(!confirm('ลบด่านนี้?'))return;
+  allLevels=allLevels.filter(l=>l.id!==id);
+  saveCustom();
+  renderEdList();
+}
+
+function edCancel(){
+  renderEdList();
+}
+
+function edAddCat(){
+  edCats.push({id:'c'+Date.now(),name:{th:'',en:''},items:[{th:'',en:''}]});
+  renderEdCats();
+}
+
+function renderEdCats(){
+  document.getElementById('ed-cats').innerHTML=edCats.map((cat,ci)=>`
+    <div class="cat-blk">
+      <div class="cat-row">
+        <input placeholder="หมวด TH" value="${cat.name.th}" data-ed-field="cat-th" data-ci="${ci}">
+        <input placeholder="Category EN" value="${cat.name.en}" data-ed-field="cat-en" data-ci="${ci}">
+        <button type="button" class="ed-del" data-action="ed-del-cat" data-ci="${ci}">✕</button>
+      </div>
+      ${cat.items.map((item,ii)=>`
+        <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:5px;margin-bottom:5px">
+          <input placeholder="คำ TH" value="${item.th}" data-ed-field="item-th" data-ci="${ci}" data-ii="${ii}" style="font-size:.75rem">
+          <input placeholder="Word EN" value="${item.en}" data-ed-field="item-en" data-ci="${ci}" data-ii="${ii}" style="font-size:.75rem">
+          <button type="button" class="ed-del" data-action="ed-del-item" data-ci="${ci}" data-ii="${ii}">✕</button>
+        </div>`).join('')}
+      <button type="button" class="ed-add" data-action="ed-add-item" data-ci="${ci}">+ คำ</button>
+    </div>`).join('');
+}
+
+function edSave(){
+  const th=document.getElementById('ei-th').value.trim();
+  if(!th){toast('ใส่ชื่อด่านก่อน');return;}
+  const en=document.getElementById('ei-en').value.trim();
+  const mv=parseInt(document.getElementById('ei-mv').value)||80;
+  
+  // Update categories and calculate items lengths correctly
+  const clean=edCats.map(c=>{
+    const items=c.items.filter(i=>i.th);
+    return {
+      ...c,
+      total: items.length, // solved completion bug for custom levels
+      items
+    };
+  });
+  
+  if(clean.some(c=>!c.name.th||c.items.length<2)){toast('แต่ละหมวดต้องมีอย่างน้อย 2 คำ');return;}
+  
+  const newId=edEditId||Date.now();
+  const newLv={id:newId,title:{th,en:en||th},maxMoves:mv,categories:clean,_custom:true};
+  
+  if(edEditId){
+    const idx=allLevels.findIndex(l=>l.id===edEditId);
+    allLevels[idx]=newLv;
+  } else {
+    allLevels.push(newLv);
+  }
+  
+  saveCustom();
+  toast('บันทึกแล้ว ✓');
+  renderEdList();
+}
+
+init();
+}catch(err){
+  var h=document.getElementById('open-hint');
+  if(h)h.style.display='block';
+}
+</script>
+</body>
+</html>
