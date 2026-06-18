@@ -1244,16 +1244,22 @@ function renderGame(){
 function renderSlots(){
   const VISIBLE_SLOTS = 4;
   document.getElementById('slots-row').style.gridTemplateColumns=`repeat(${VISIBLE_SLOTS}, 1fr)`;
-  const displaySlots = G.slots.slice(0, VISIBLE_SLOTS);
-  while (displaySlots.length < VISIBLE_SLOTS) displaySlots.push(null);
-  document.getElementById('slots-row').innerHTML=displaySlots.map((sl,si)=>{
+  const displaySlots = G.slots
+    .map((sl, index) => ({ sl, index }))
+    .filter(item => !item.sl.complete)
+    .slice(0, VISIBLE_SLOTS);
+  while (displaySlots.length < VISIBLE_SLOTS) {
+    displaySlots.push({ sl: null, index: -1 });
+  }
+  document.getElementById('slots-row').innerHTML=displaySlots.map((item,si)=>{
+    const sl = item.sl;
+    const actualIndex = item.index;
     if(sl===null)return`<div class="slot"><div class="slot-crown-ico">👑</div></div>`;
-    if(sl.complete)return`<div class="slot done-sl"><div style="font-size:1.5rem">✅</div><div class="slot-name">${tl(sl.catCard?.name)}</div></div>`;
-    if(sl.catCard)return`<div class="slot occupied" id="sl-${si}" data-slot="${si}" data-action="slot">
+    if(sl.catCard)return`<div class="slot occupied" id="sl-${actualIndex}" data-slot="${actualIndex}" data-action="slot">
       <div class="slot-inner"><div style="font-size:.6rem;color:var(--text-gold);font-weight:700">${sl.placed.length}/${sl.total} 👑</div>
       <div style="color:var(--crown);font-size:.95rem">👑</div>
       <div class="slot-name">${tl(sl.catCard.name)}</div></div></div>`;
-    return`<div class="slot" id="sl-${si}" data-slot="${si}" data-action="slot">
+    return`<div class="slot" id="sl-${actualIndex}" data-slot="${actualIndex}" data-action="slot">
       <div class="slot-crown-ico">👑</div></div>`;
   }).join('');
 }
@@ -1727,4 +1733,3 @@ init();
 </script>
 </body>
 </html>
- 
